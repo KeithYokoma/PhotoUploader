@@ -28,12 +28,25 @@ public class PickedPhotoProvider extends ContentProvider {
 		MATCHER.addURI(AUTHORITY, PickedPhotoScheme.TABLE_NAME + "/#", TYPE_URI);
 	}
 
+	/**
+	 * この ContentProvider を初期化します。
+	 * @return true
+	 */
 	@Override
 	public boolean onCreate() {
-		mHelper = new PickedPhotoDbHelper(getContext());
+		mHelper = new PickedPhotoDbHelper(getContext()); // データベースを管理するオブジェクトを初期化
 		return true;
 	}
 
+	/**
+	 * データベースにデータを問い合わせます。
+	 * @param uri 問い合わせるデータベース、テーブル、id を示す Uri。
+	 * @param projection どの行を結果として返して欲しいかを指定する
+	 * @param selection 条件式
+	 * @param selectionArgs 条件のプレースホルダに代入する実際の値
+	 * @param sortOrder 結果のソート順
+	 * @return 結果の一覧
+	 */
 	@Nullable
 	@Override
 	public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
@@ -56,6 +69,12 @@ public class PickedPhotoProvider extends ContentProvider {
 		}
 	}
 
+	/**
+	 * Uri で示されるデータがどのような種類のデータかを返します。
+	 * @param uri 調べたい Uri
+	 * @return データの種類を表す文字列。{@link PickedPhotoProvider#CONTENT_TYPE_URI} か {@link PickedPhotoProvider#CONTENT_TYPE_URIS} のいずれか。
+	 * @throws IllegalArgumentException この ContentProvider では取り扱っていない種類のデータの場合。
+	 */
 	@Nullable
 	@Override
 	public String getType(@NonNull Uri uri) {
@@ -69,6 +88,12 @@ public class PickedPhotoProvider extends ContentProvider {
 		}
 	}
 
+	/**
+	 * Uri で示されるデータベース・テーブルに対して、values のもつデータを追加します
+	 * @param uri データを追加したいデータベース・テーブルの Uri
+	 * @param values 追加したいデータ
+	 * @return 追加されたデータを示す Uri
+	 */
 	@Nullable
 	@Override
 	public Uri insert(@NonNull Uri uri, ContentValues values) {
@@ -89,6 +114,13 @@ public class PickedPhotoProvider extends ContentProvider {
 		}
 	}
 
+	/**
+	 * 条件にあうデータを Uri で示されるデータベース・テーブルから削除します
+	 * @param uri 削除したいデータを持っているデータベース・テーブルの Uri
+	 * @param selection 条件式
+	 * @param selectionArgs 条件のプレースホルダに代入する実際の値
+	 * @return 削除された件数
+	 */
 	@Override
 	public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
 		if (MATCHER.match(uri) != TYPE_URI) {
@@ -108,6 +140,14 @@ public class PickedPhotoProvider extends ContentProvider {
 		}
 	}
 
+	/**
+	 * Uri で示されるデータベース・テーブルの中にある条件にあうデータを更新します
+	 * @param uri 更新したいデータを持っているデータベース・テーブルの Uri
+	 * @param values 更新後のデータ
+	 * @param selection 条件式
+	 * @param selectionArgs 条件のプレースホルダに代入する実際の値
+	 * @return 更新された件数
+	 */
 	@Override
 	public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		SQLiteDatabase db = null;
