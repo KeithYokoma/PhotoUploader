@@ -34,9 +34,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 		fab.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) { // floating action button をおした時、画像の選択画面を起動する
-				Intent intent = new Intent(); // TODO (実習1) 選択画面を開く為の Intent の Action を追加しよう
+				Intent intent = new Intent(Intent.ACTION_PICK); // TODO (実習1) 選択画面を開く為の Intent の Action を追加しよう
 				intent.setType("image/*"); // 画像のみを選択できるようにします
 				// TODO (実習1) 上記の Intent を使って、選択した画像を取得するための新しい画面を呼びだそう
+				startActivityForResult(intent, REQUEST_CODE_PICK_PHOTO);
 			}
 		});
 		getSupportLoaderManager().initLoader(0, null, this); // 保存した画像の読込みを始める
@@ -47,10 +48,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 		super.onActivityResult(requestCode, resultCode, data); // 必ず呼ぶようにします
 
 		if (requestCode == REQUEST_CODE_PICK_PHOTO) {
-			if (true) { // TODO (実習1) この if 文の条件を、resultCode が RESULT_OK かどうかチェックするように書き換えよう
-				Uri uri = null; // TODO (実習1) uri を、data から取り出すように書き換えよう
+			if (resultCode == RESULT_OK) { // TODO (実習1) この if 文の条件を、resultCode が RESULT_OK かどうかチェックするように書き換えよう
+				Uri uri = data.getData(); // TODO (実習1) uri を、data から取り出すように書き換えよう
 				Toast.makeText(getApplicationContext(), uri.toString(), Toast.LENGTH_SHORT).show();
 				// TODO (実習2) 取得した Uri を ContentProvider に登録しよう
+				insertUri(uri);
 			}
 		}
 	}
@@ -63,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 		// TODO (実習2) PickedPhotoArrayAdapter を PickedPhotoCursorAdapter に変更し終わったら、data を mAdapter にセットしよう
+		mAdapter.swapCursor(data);
 	}
 
 	@Override
@@ -76,5 +79,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 		ContentValues values = new ContentValues();
 		values.put(PickedPhotoScheme.COLUMN_URI, uri.toString());
 		// TODO (実習2) ContentResolver を使って、PickedPhotoProvider.CONTENT_URI に values を追加しよう
+		resolver.insert(PickedPhotoProvider.CONTENT_URI, values);
 	}
 }
