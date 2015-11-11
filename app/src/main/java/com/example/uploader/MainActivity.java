@@ -16,6 +16,9 @@ import android.view.View;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import com.firebase.client.AuthData;
+import com.firebase.client.Firebase;
+
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 	private static final int REQUEST_CODE_PICK_PHOTO = 1;
 	private PickedPhotoAdapter mAdapter;
@@ -23,6 +26,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		Firebase.setAndroidContext(this);
+		Firebase ref = new Firebase("https://amber-torch-5086.firebaseio.com/");
+		AuthData data = ref.getAuth();
+		if (data==null) {
+			// 認証失敗
+			Intent intent = new Intent(this, LoginActivity.class);
+			startActivity(intent);
+		}
+		else {
+			// 認証成功
+		}
+
 		setContentView(R.layout.activity_main);
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
