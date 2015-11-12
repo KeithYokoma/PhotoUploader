@@ -12,89 +12,117 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.GridView;
 import android.widget.Toast;
 
-import com.firebase.client.AuthData;
-import com.firebase.client.Firebase;
+import com.parse.Parse;
+import com.parse.ParseUser;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
-	private static final int REQUEST_CODE_PICK_PHOTO = 1;
-	private PickedPhotoAdapter mAdapter;
+    private static String TAG = "MainActivity";
+    private static final int REQUEST_CODE_PICK_PHOTO = 1;
+    private PickedPhotoAdapter mAdapter;
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-		Firebase.setAndroidContext(this);
-		Firebase ref = new Firebase("https://amber-torch-5086.firebaseio.com/");
-		AuthData data = ref.getAuth();
-		if (data==null) {
-			// 認証失敗
-			Intent intent = new Intent(this, LoginActivity.class);
-			startActivity(intent);
-		}
-		else {
-			// 認証成功
-		}
+        Parse.initialize(this, getString(R.string.parse_application_id), getString(R.string.parse_client_key));
+        ParseUser user = ParseUser.getCurrentUser();
+        if (user==null) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+        }
+        else {
+            Log.d(TAG, "logged in: " + user.getUsername());
+        }
 
-		setContentView(R.layout.activity_main);
-		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-		setSupportActionBar(toolbar);
-		GridView grid = (GridView) findViewById(R.id.photo_grid);
-		mAdapter = new PickedPhotoAdapter(this);
-		grid.setAdapter(mAdapter);
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        //setSupportActionBar(toolbar);
+        toolbar.setTitle(R.string.app_name);
+        toolbar.inflateMenu(R.menu.menu_main);
+        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                return onOptionsItemSelected(menuItem);
+            }
+        });
 
-		FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-		fab.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) { // floating action button をおした時、画像の選択画面を起動する
-				Intent intent = new Intent(Intent.ACTION_PICK); // TODO (実習1) 選択画面を開く為の Intent の Action を追加しよう
-				intent.setType("image/*"); // 画像のみを選択できるようにします
-				// TODO (実習1) 上記の Intent を使って、選択した画像を取得するための新しい画面を呼びだそう
-				startActivityForResult(intent, REQUEST_CODE_PICK_PHOTO);
-			}
-		});
-		getSupportLoaderManager().initLoader(0, null, this); // 保存した画像の読込みを始める
-	}
+        GridView grid = (GridView) findViewById(R.id.photo_grid);
+        mAdapter = new PickedPhotoAdapter(this);
+        grid.setAdapter(mAdapter);
 
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data); // 必ず呼ぶようにします
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) { // floating action button をおした時、画像の選択画面を起動する
+                Intent intent = new Intent(Intent.ACTION_PICK); // TODO (実習1) 選択画面を開く為の Intent の Action を追加しよう
+                intent.setType("image/*"); // 画像のみを選択できるようにします
+                // TODO (実習1) 上記の Intent を使って、選択した画像を取得するための新しい画面を呼びだそう
+                startActivityForResult(intent, REQUEST_CODE_PICK_PHOTO);
+            }
+        });
+        getSupportLoaderManager().initLoader(0, null, this); // 保存した画像の読込みを始める
+    }
 
-		if (requestCode == REQUEST_CODE_PICK_PHOTO) {
-			if (resultCode == RESULT_OK) { // TODO (実習1) この if 文の条件を、resultCode が RESULT_OK かどうかチェックするように書き換えよう
-				Uri uri = data.getData(); // TODO (実習1) uri を、data から取り出すように書き換えよう
-				Toast.makeText(getApplicationContext(), uri.toString(), Toast.LENGTH_SHORT).show();
-				// TODO (実習2) 取得した Uri を ContentProvider に登録しよう
-				insertUri(uri);
-			}
-		}
-	}
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data); // 必ず呼ぶようにします
 
-	@Override
-	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-		return new CursorLoader(this, PickedPhotoProvider.CONTENT_URI, null, null, null, null);
-	}
+        if (requestCode == REQUEST_CODE_PICK_PHOTO) {
+            if (resultCode == RESULT_OK) { // TODO (実習1) この if 文の条件を、resultCode が RESULT_OK かどうかチェックするように書き換えよう
+                Uri uri = data.getData(); // TODO (実習1) uri を、data から取り出すように書き換えよう
+                Toast.makeText(getApplicationContext(), uri.toString(), Toast.LENGTH_SHORT).show();
+                // TODO (実習2) 取得した Uri を ContentProvider に登録しよう
+                insertUri(uri);
+            }
+        }
+    }
 
-	@Override
-	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-		// TODO (実習2) PickedPhotoArrayAdapter を PickedPhotoCursorAdapter に変更し終わったら、data を mAdapter にセットしよう
-		mAdapter.swapCursor(data);
-	}
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new CursorLoader(this, PickedPhotoProvider.CONTENT_URI, null, null, null, null);
+    }
 
-	@Override
-	public void onLoaderReset(Loader<Cursor> loader) {
-		mAdapter.swapCursor(null);
-	}
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        // TODO (実習2) PickedPhotoArrayAdapter を PickedPhotoCursorAdapter に変更し終わったら、data を mAdapter にセットしよう
+        mAdapter.swapCursor(data);
+    }
 
-	// Uri を ContentProvider に登録するメソッド
-	private void insertUri(Uri uri) {
-		ContentResolver resolver = getContentResolver();
-		ContentValues values = new ContentValues();
-		values.put(PickedPhotoScheme.COLUMN_URI, uri.toString());
-		// TODO (実習2) ContentResolver を使って、PickedPhotoProvider.CONTENT_URI に values を追加しよう
-		resolver.insert(PickedPhotoProvider.CONTENT_URI, values);
-	}
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mAdapter.swapCursor(null);
+    }
+
+    // Uri を ContentProvider に登録するメソッド
+    private void insertUri(Uri uri) {
+        ContentResolver resolver = getContentResolver();
+        ContentValues values = new ContentValues();
+        values.put(PickedPhotoScheme.COLUMN_URI, uri.toString());
+        // TODO (実習2) ContentResolver を使って、PickedPhotoProvider.CONTENT_URI に values を追加しよう
+        resolver.insert(PickedPhotoProvider.CONTENT_URI, values);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            // Settings を選択したらlSettingActivityを表示する
+            Intent intent = new android.content.Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 }

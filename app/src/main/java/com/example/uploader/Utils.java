@@ -10,8 +10,6 @@ import android.net.Uri;
  * @author KeishinYokomaku
  */
 public final class Utils {
-	public static String API_URL = "https://amber-torch-5086.firebaseio.com/";
-
 	private Utils() {
 		throw new AssertionError("don't use ctor");
 	}

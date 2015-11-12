@@ -1,4 +1,15 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.parse'
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url 'https://maven.parse.com/repo' }
+    }
+    dependencies {
+        classpath 'com.parse.tools:gradle:1.+'
+    }
+}
 
 android {
     compileSdkVersion 23
@@ -30,5 +41,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.1.0'
     compile 'com.android.support:design:23.1.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.firebase:firebase-client-android:2.4.0+'
+    compile 'com.parse.bolts:bolts-android:1.2.1'
+    compile 'com.parse:parse-android:1.10.3'
 }
