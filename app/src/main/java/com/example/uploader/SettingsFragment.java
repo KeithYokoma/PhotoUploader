@@ -4,19 +4,23 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
+
+import com.parse.ParseUser;
 
 
 public class SettingsFragment extends PreferenceFragment {
+    private ParseUser user;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         addPreferencesFromResource(R.xml.preference);
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-
         EditTextPreference editText = (EditTextPreference) findPreference(getString(R.string.display_name_key));
-        editText.setSummary(editText.getText());
+
+        // usernameを表示させておく
+        user = ParseUser.getCurrentUser();
+        editText.setSummary(user.getUsername());
     }
 
     // ユーザーが設定を変更した時に実行される処理を定義できる
@@ -26,6 +30,10 @@ public class SettingsFragment extends PreferenceFragment {
             if (key.equals(getString(R.string.display_name_key))) {
                 EditTextPreference pref = (EditTextPreference) findPreference(key);
                 pref.setSummary(pref.getText());
+
+                // 表示を変更するついでにparseのデータも更新する
+                user.setUsername(pref.getText());
+                user.saveInBackground();
             }
         }
     };
