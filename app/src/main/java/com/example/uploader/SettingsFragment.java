@@ -5,11 +5,7 @@ import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.PreferenceFragment;
 
-import com.parse.ParseUser;
-
-
 public class SettingsFragment extends PreferenceFragment {
-    private ParseUser user;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -18,11 +14,7 @@ public class SettingsFragment extends PreferenceFragment {
         addPreferencesFromResource(R.xml.preference);
         EditTextPreference editText = (EditTextPreference) findPreference(getString(R.string.display_name_key));
 
-        // usernameを表示させておく
-        user = ParseUser.getCurrentUser();
-        if (user!=null) {
-            editText.setSummary(user.getUsername());
-        }
+        // TODO 8-1 usernameを表示しよう
     }
 
     // ユーザーが設定を変更した時に実行される処理を定義できる
@@ -33,11 +25,7 @@ public class SettingsFragment extends PreferenceFragment {
                 EditTextPreference pref = (EditTextPreference) findPreference(key);
                 pref.setSummary(pref.getText());
 
-                if (user!=null) {
-                    // 表示を変更するついでにparseのデータも更新する
-                    user.setUsername(pref.getText());
-                    user.saveInBackground();
-                }
+                // TODO 8-2 usernameの変更を保存しよう
             }
         }
     };

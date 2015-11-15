@@ -17,8 +17,6 @@ import android.view.View;
 import android.widget.GridView;
 import android.widget.Toast;
 
-import com.parse.ParseUser;
-
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     private static String TAG = "MainActivity";
     private static final int REQUEST_CODE_PICK_PHOTO = 1;
@@ -28,14 +26,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ParseUser user = ParseUser.getCurrentUser();
-        if (user==null) {
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-        }
-        else {
-            Toast.makeText(this, "Welcome! " + user.getUsername(), Toast.LENGTH_LONG).show();
-        }
+        // TODO 4.ログインしているか確認して、必要であれば、LoginActivityに遷移しよう
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -111,9 +102,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             return true;
         }
         else if (id == R.id.action_logout){
-            ParseUser.logOut();
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
+            // TODO 7.ログアウト処理を書いてみよう
         }
 
         return super.onOptionsItemSelected(item);

@@ -27,11 +27,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.parse.LogInCallback;
-import com.parse.ParseException;
-import com.parse.ParseUser;
-import com.parse.SignUpCallback;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -194,36 +189,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private void registerAccount(final String email, final String password, final String userName) {
         showProgress(true);
 
-        ParseUser user = new ParseUser();
-        user.setUsername(userName);
-        user.setPassword(password);
-        user.setEmail(email);
-
-        user.signUpInBackground(new SignUpCallback() {
-            public void done(ParseException e) {
-                if (e == null) {
-                    login(userName, password);
-                } else {
-                    Log.e(TAG, "register error");
-                    showProgress(false);
-                }
-            }
-        });
+        // TODO 5.アカウント登録しよう
     }
 
     private void login(String userName, String password) {
         showProgress(true);
-        ParseUser.logInInBackground(userName, password, new LogInCallback() {
-            public void done(ParseUser user, ParseException e) {
-                if (user != null) {
-                    showProgress(false);
-                    finish();
-                } else {
-                    showProgress(false);
-                    Log.e(TAG, "login error");
-                }
-            }
-        });
+
+        // TODO 6.ログインしよう
     }
 
     private boolean isEmailValid(String email) {
