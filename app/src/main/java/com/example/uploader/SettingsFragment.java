@@ -20,7 +20,9 @@ public class SettingsFragment extends PreferenceFragment {
 
         // usernameを表示させておく
         user = ParseUser.getCurrentUser();
-        editText.setSummary(user.getUsername());
+        if (user!=null) {
+            editText.setSummary(user.getUsername());
+        }
     }
 
     // ユーザーが設定を変更した時に実行される処理を定義できる
@@ -31,9 +33,11 @@ public class SettingsFragment extends PreferenceFragment {
                 EditTextPreference pref = (EditTextPreference) findPreference(key);
                 pref.setSummary(pref.getText());
 
-                // 表示を変更するついでにparseのデータも更新する
-                user.setUsername(pref.getText());
-                user.saveInBackground();
+                if (user!=null) {
+                    // 表示を変更するついでにparseのデータも更新する
+                    user.setUsername(pref.getText());
+                    user.saveInBackground();
+                }
             }
         }
     };

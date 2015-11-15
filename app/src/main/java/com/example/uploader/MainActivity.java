@@ -39,7 +39,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
         toolbar.setTitle(R.string.app_name);
         toolbar.inflateMenu(R.menu.menu_main);
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
@@ -110,6 +109,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             Intent intent = new android.content.Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
+        }
+        else if (id == R.id.action_logout){
+            ParseUser.logOut();
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
