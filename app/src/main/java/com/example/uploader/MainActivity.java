@@ -69,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
         getSupportLoaderManager().initLoader(0, null, this); // 保存した画像の読込みを始める
+
+        //TODO: ParseObjectを作成してParse上に保存してみよう
     }
 
     @Override
