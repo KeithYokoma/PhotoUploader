@@ -20,8 +20,12 @@ import android.view.View;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseObject;
 import com.parse.ParseUser;
+import com.parse.ProgressCallback;
+import com.parse.SaveCallback;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -70,7 +74,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         });
         getSupportLoaderManager().initLoader(0, null, this); // 保存した画像の読込みを始める
 
-        //TODO: ParseObjectを作成してParse上に保存してみよう
+//        ParseObject parseObject = new ParseObject("SampleObject");
+//        parseObject.put("stringColumn", "aaaa");
+//        parseObject.put("intColumn", 1);
+//        parseObject.put("boolColumn", true);
+//        parseObject.saveInBackground();
     }
 
     @Override
@@ -90,7 +98,26 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private void uploadToParse(Uri uri) {
         final ParseFile parseFile = createParseFile(this, uri);
         if (parseFile == null) return;
-        //TODO: parseにファイルをアップロードする処理を書いてみよう
+        parseFile.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e != null) {
+                    Log.e(TAG, "upload fail!!!!!", e);
+                    return;
+                }
+                Log.v(TAG, "upload done!!!!!");
+                ParseObject obj = new ParseObject("photo");
+                // Userを取得
+                obj.put("uploadUserId", ParseUser.getCurrentUser().getObjectId());
+                obj.put("file", parseFile);
+                obj.saveInBackground();
+            }
+        }, new ProgressCallback() {
+            @Override
+            public void done(Integer percentDone) {
+                // プログレスの表示をしても良い
+            }
+        });
     }
 
     @Override
