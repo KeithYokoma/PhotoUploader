@@ -2,22 +2,30 @@ package com.example.uploader;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import com.parse.ParseFile;
 import com.parse.ParseUser;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     private static String TAG = "MainActivity";
@@ -29,11 +37,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onCreate(savedInstanceState);
 
         ParseUser user = ParseUser.getCurrentUser();
-        if (user==null) {
+        if (user == null) {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
-        }
-        else {
+        } else {
             Toast.makeText(this, "Welcome! " + user.getUsername(), Toast.LENGTH_LONG).show();
         }
 
@@ -73,8 +80,15 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 Uri uri = data.getData();
                 Toast.makeText(getApplicationContext(), uri.toString(), Toast.LENGTH_SHORT).show();
                 insertUri(uri);
+                uploadToParse(uri);
             }
         }
+    }
+
+    private void uploadToParse(Uri uri) {
+        final ParseFile parseFile = createParseFile(this, uri);
+        if (parseFile == null) return;
+        //TODO: parseにファイルをアップロードする処理を書いてみよう
     }
 
     @Override
@@ -100,6 +114,41 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         resolver.insert(PickedPhotoProvider.CONTENT_URI, values);
     }
 
+    private ParseFile createParseFile(Context context, Uri uri) {
+        ContentResolver resolver = context.getContentResolver();
+        String[] columns = {MediaStore.Images.Media.DATA};
+        Cursor cursor = null;
+        FileInputStream fis = null;
+        try {
+            cursor = resolver.query(uri, columns, null, null, null);
+            if (cursor == null) {
+                return null;
+            }
+            cursor.moveToFirst();
+            String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+            File file = new File(path);
+
+            byte[] data = new byte[(int) file.length()];
+            fis = new FileInputStream(file);
+            int readLength = fis.read(data);
+            if (readLength != data.length) {
+                Log.e(TAG, "read fail");
+                return null;
+            }
+            return new ParseFile(file.getName(), data);
+        } catch (IOException e) {
+            Log.e(TAG, "fail create parse file", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            try {
+                if (fis != null) fis.close();
+            } catch (IOException ignored) {
+            }
+        }
+
+        return null;
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -109,8 +158,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             Intent intent = new android.content.Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
-        }
-        else if (id == R.id.action_logout){
+        } else if (id == R.id.action_logout) {
             ParseUser.logOut();
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
