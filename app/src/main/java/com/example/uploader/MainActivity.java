@@ -17,6 +17,7 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -36,6 +37,7 @@ import com.parse.SaveCallback;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -76,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 // Grid のアイテムをタップした時のイベントハンドラ
                 Cursor cursor = (Cursor) parent.getItemAtPosition(position); // Adapter から選択された場所の Cursor を取得する
                 String photoObjectId = cursor.getString(cursor.getColumnIndex(PickedPhotoScheme.COLUMN_PHOTO_OBJECT_ID)); // 写真のオブジェクトを見つけるために保存した objectId を取り出す
-                // TODO (実習) photo から、photoObjectId に一致する ParseObject を取得する
+                // TODO (実習1-1) photo から、photoObjectId に一致する ParseObject を取得する
                 ParseQuery.getQuery("photo")
                         .findInBackground(new FindCallback<ParseObject>() {
                             @Override
@@ -84,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                                 if (e == null && !objects.isEmpty()) {
                                     ParseObject photo = objects.get(0);
                                     ParseObject object = new ParseObject("Like");
-                                    // TODO (実習) Like するユーザのオブジェクトと、Like する写真のオブジェクトを object に追加しよう
+                                    // TODO (実習1-2) Like するユーザのオブジェクトと、Like する写真のオブジェクトを object に追加しよう
                                     object.put("who", null); // TODO ユーザ
                                     object.put("target_photo", null); // TODO 写真
                                     object.saveInBackground(new SaveCallback() {
@@ -114,14 +116,18 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                             public void done(List<ParseObject> objects, ParseException e) {
                                 if (e == null && !objects.isEmpty()) {
                                     ParseObject photo = objects.get(0);
-                                    // TODO who カラムを含むよう ParseQuery を作る
+                                    // TODO (実習2-1) who カラムを含むよう ParseQuery を作る
                                     ParseQuery.getQuery("Like")
                                             .whereEqualTo("target_photo", photo)
                                             .findInBackground(new FindCallback<ParseObject>() {
                                                 @Override
                                                 public void done(List<ParseObject> objects, ParseException e) {
                                                     if (e == null) {
-
+                                                        List<String> names = new ArrayList<>();
+                                                        for (ParseObject obj : objects) {
+                                                            names.add(obj.getParseObject("who").getString("username"));
+                                                        }
+                                                        Toast.makeText(getApplicationContext(), TextUtils.join(", ", names), Toast.LENGTH_SHORT).show();
                                                     } else {
                                                         Log.e(TAG, "error while reading like data", e);
                                                     }
