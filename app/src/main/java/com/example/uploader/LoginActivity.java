@@ -204,7 +204,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 if (e == null) {
                     login(userName, password);
                 } else {
-                    Log.e(TAG, "register error");
+                    Log.e(TAG, "register error", e);
                     showProgress(false);
                 }
             }
@@ -220,7 +220,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     finish();
                 } else {
                     showProgress(false);
-                    Log.e(TAG, "login error");
+                    Log.e(TAG, "login error", e);
                 }
             }
         });
