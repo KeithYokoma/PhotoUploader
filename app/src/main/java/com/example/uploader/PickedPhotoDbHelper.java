@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 public class PickedPhotoDbHelper extends SQLiteOpenHelper {
 	public static final String DB_NAME = "picked_photo.db";
-	public static final int VERSION = 1;
+	public static final int VERSION = 2;
 
 	public PickedPhotoDbHelper(Context context) {
 		super(context, DB_NAME, null, VERSION);

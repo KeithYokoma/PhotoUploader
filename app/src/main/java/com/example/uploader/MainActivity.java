@@ -1,5 +1,6 @@
 package com.example.uploader;
 
+import android.app.Notification;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -10,19 +11,24 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.ProgressCallback;
 import com.parse.SaveCallback;
@@ -30,10 +36,12 @@ import com.parse.SaveCallback;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     private static String TAG = "MainActivity";
     private static final int REQUEST_CODE_PICK_PHOTO = 1;
+    private static final int UPLOAD_NOTIFICATION_ID = 1;
     private PickedPhotoAdapter mAdapter;
 
     @Override
@@ -62,6 +70,38 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         GridView grid = (GridView) findViewById(R.id.photo_grid);
         mAdapter = new PickedPhotoAdapter(this);
         grid.setAdapter(mAdapter);
+        grid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // Grid のアイテムをタップした時のイベントハンドラ
+                Cursor cursor = (Cursor) parent.getItemAtPosition(position); // Adapter から選択された場所の Cursor を取得する
+                String photoObjectId = cursor.getString(cursor.getColumnIndex(PickedPhotoScheme.COLUMN_PHOTO_OBJECT_ID)); // 写真のオブジェクトを見つけるために保存した objectId を取り出す
+                // TODO (実習) photo から、photoObjectId に一致する ParseObject を取得する
+                ParseQuery.getQuery("photo")
+                        .findInBackground(new FindCallback<ParseObject>() {
+                            @Override
+                            public void done(List<ParseObject> objects, ParseException e) {
+                                if (e == null && !objects.isEmpty()) {
+                                    ParseObject photo = objects.get(0);
+                                    ParseObject object = new ParseObject("Like");
+                                    // TODO (実習) Like するユーザのオブジェクトと、Like する写真のオブジェクトを object に追加しよう
+                                    object.put("who", null); // TODO ユーザ
+                                    object.put("target_photo", null); // TODO 写真
+                                    object.saveInBackground(new SaveCallback() {
+                                        @Override
+                                        public void done(ParseException e) {
+                                            if (e == null) {
+                                                Toast.makeText(getApplicationContext(), "Liked!", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    Log.e(TAG, "error while putting like.", e);
+                                }
+                            }
+                        });
+            }
+        });
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -72,13 +112,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 startActivityForResult(intent, REQUEST_CODE_PICK_PHOTO);
             }
         });
-        getSupportLoaderManager().initLoader(0, null, this); // 保存した画像の読込みを始める
 
-//        ParseObject parseObject = new ParseObject("SampleObject");
-//        parseObject.put("stringColumn", "aaaa");
-//        parseObject.put("intColumn", 1);
-//        parseObject.put("boolColumn", true);
-//        parseObject.saveInBackground();
+        getSupportLoaderManager().initLoader(0, null, this); // 保存した画像の読込みを始める
     }
 
     @Override
@@ -95,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         }
     }
 
-    private void uploadToParse(Uri uri) {
+    private void uploadToParse(final Uri uri) {
         final ParseFile parseFile = createParseFile(this, uri);
         if (parseFile == null) return;
         parseFile.saveInBackground(new SaveCallback() {
@@ -106,16 +141,38 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                     return;
                 }
                 Log.v(TAG, "upload done!!!!!");
-                ParseObject obj = new ParseObject("photo");
+                final ParseObject obj = new ParseObject("photo");
                 // Userを取得
                 obj.put("uploadUserId", ParseUser.getCurrentUser().getObjectId());
                 obj.put("file", parseFile);
-                obj.saveInBackground();
+                obj.saveInBackground(new SaveCallback() {
+                    @Override
+                    public void done(ParseException e) {
+                        addObjectId(uri, obj);
+                    }
+                });
+                NotificationManagerCompat nm = NotificationManagerCompat.from(MainActivity.this);
+                Notification n = new NotificationCompat.Builder(MainActivity.this)
+                        .setTicker("Uploading photo...")
+                        .setContentTitle("Uploaded!")
+                        .setContentText("Photo has been uploaded.")
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setAutoCancel(true)
+                        .build();
+                nm.notify(UPLOAD_NOTIFICATION_ID, n);
             }
         }, new ProgressCallback() {
             @Override
             public void done(Integer percentDone) {
-                // プログレスの表示をしても良い
+                NotificationManagerCompat nm = NotificationManagerCompat.from(MainActivity.this);
+                Notification n = new NotificationCompat.Builder(MainActivity.this)
+                        .setTicker("Uploading photo...")
+                        .setContentTitle("Uploading photo in progress")
+                        .setProgress(100, percentDone, false)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setOngoing(true)
+                        .build();
+                nm.notify(UPLOAD_NOTIFICATION_ID, n);
             }
         });
     }
@@ -133,6 +190,18 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mAdapter.swapCursor(null);
+    }
+
+    private void addObjectId(Uri uri, ParseObject object) {
+        ContentResolver resolver = getContentResolver();
+        ContentValues values = new ContentValues();
+        values.put(PickedPhotoScheme.COLUMN_PHOTO_OBJECT_ID, object.getObjectId());
+        int count = resolver.update(PickedPhotoProvider.CONTENT_URI, values, PickedPhotoScheme.COLUMN_URI + " = ?", new String[] {uri.toString()});
+        if (count > 0) {
+            Toast.makeText(getApplicationContext(), "updated", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(getApplicationContext(), "no update", Toast.LENGTH_LONG).show();
+        }
     }
 
     // Uri を ContentProvider に登録するメソッド
