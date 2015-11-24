@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 String photoObjectId = cursor.getString(cursor.getColumnIndex(PickedPhotoScheme.COLUMN_PHOTO_OBJECT_ID)); // 写真のオブジェクトを見つけるために保存した objectId を取り出す
                 // TODO (実習1-1) photo から、photoObjectId に一致する ParseObject を取得する
                 ParseQuery.getQuery("photo")
+                        .whereEqualTo("objectId", photoObjectId)
                         .findInBackground(new FindCallback<ParseObject>() {
                             @Override
                             public void done(List<ParseObject> objects, ParseException e) {
@@ -87,8 +88,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                                     ParseObject photo = objects.get(0);
                                     ParseObject object = new ParseObject("Like");
                                     // TODO (実習1-2) Like するユーザのオブジェクトと、Like する写真のオブジェクトを object に追加しよう
-                                    object.put("who", null); // TODO ユーザ
-                                    object.put("target_photo", null); // TODO 写真
+                                    object.put("who", ParseUser.getCurrentUser()); // TODO ユーザ
+                                    object.put("target_photo", photo); // TODO 写真
                                     object.saveInBackground(new SaveCallback() {
                                         @Override
                                         public void done(ParseException e) {
@@ -119,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                                     // TODO (実習2-1) who カラムを含むよう ParseQuery を作る
                                     ParseQuery.getQuery("Like")
                                             .whereEqualTo("target_photo", photo)
+                                            .include("who")
                                             .findInBackground(new FindCallback<ParseObject>() {
                                                 @Override
                                                 public void done(List<ParseObject> objects, ParseException e) {
