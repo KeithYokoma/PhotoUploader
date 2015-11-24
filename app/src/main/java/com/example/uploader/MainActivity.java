@@ -102,6 +102,39 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                         });
             }
         });
+        grid.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                Cursor cursor = (Cursor) parent.getItemAtPosition(position); // Adapter から選択された場所の Cursor を取得する
+                String photoObjectId = cursor.getString(cursor.getColumnIndex(PickedPhotoScheme.COLUMN_PHOTO_OBJECT_ID)); // 写真のオブジェクトを見つけるために保存した objectId を取り出す
+                ParseQuery.getQuery("photo")
+                        .whereEqualTo("objectId", photoObjectId)
+                        .findInBackground(new FindCallback<ParseObject>() {
+                            @Override
+                            public void done(List<ParseObject> objects, ParseException e) {
+                                if (e == null && !objects.isEmpty()) {
+                                    ParseObject photo = objects.get(0);
+                                    // TODO who カラムを含むよう ParseQuery を作る
+                                    ParseQuery.getQuery("Like")
+                                            .whereEqualTo("target_photo", photo)
+                                            .findInBackground(new FindCallback<ParseObject>() {
+                                                @Override
+                                                public void done(List<ParseObject> objects, ParseException e) {
+                                                    if (e == null) {
+
+                                                    } else {
+                                                        Log.e(TAG, "error while reading like data", e);
+                                                    }
+                                                }
+                                            });
+                                } else {
+                                    Log.e(TAG, "error while reading data", e);
+                                }
+                            }
+                        });
+                return false;
+            }
+        });
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
