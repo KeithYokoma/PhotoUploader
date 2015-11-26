@@ -19,6 +19,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
@@ -108,7 +109,7 @@ public class SearchActivity extends AppCompatActivity {
             // TODO 3 show alertDialog
 
             AlertDialog.Builder builder = new AlertDialog.Builder(SearchActivity.this);
-            builder.setItems(new String[]{"Like", "Show users who liked"}, new DialogInterface.OnClickListener() {
+            builder.setItems(new String[]{"Like", "Show users who liked", "delete"}, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     if (which == 0) {
@@ -116,6 +117,9 @@ public class SearchActivity extends AppCompatActivity {
                     }
                     if (which == 1) {
                         showLikedUsers(photo);
+                    }
+                    if (which == 2) {
+                        deletePhoto(photo);
                     }
                 }
             });
@@ -156,6 +160,19 @@ public class SearchActivity extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    private void deletePhoto(ParseObject photo) {
+        photo.deleteInBackground(new DeleteCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e == null) {
+                    Toast.makeText(getApplicationContext(), "deleted.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "error while deleting", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private static class SearchPhotoAdapter extends ArrayAdapter<ParseObject> {
