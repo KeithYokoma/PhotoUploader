@@ -35,9 +35,11 @@ import java.util.List;
 public class SearchActivity extends AppCompatActivity {
     private String TAG = "SearchActivity";
 
+    // 現在表示している写真を入れるリスト
     private List<ParseObject> mPhotoList = new ArrayList<>();
     private SearchPhotoAdapter mPhotoAdapter;
 
+    // 現在表示しているユーザーを入れるリスト
     private List<ParseObject> mUserList = new ArrayList<>();
     private UserAdapter mUserAdapter;
 
@@ -47,35 +49,38 @@ public class SearchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
-        mUserAdapter = new UserAdapter(this, mUserList);
+        // ToolbarにSpinnerを追加します
         View customView = getLayoutInflater().inflate(R.layout.toolbar_spinner, null, false);
         toolbar.addView(customView);
+        // SpinnerにAdapterやOnItemSelectedListenerを設定します
         Spinner spinner = (Spinner) customView.findViewById(R.id.spinner);
+        mUserAdapter = new UserAdapter(this, mUserList);
         spinner.setAdapter(mUserAdapter);
         spinner.setOnItemSelectedListener(new SpinnerItemSelectedListener());
 
+        // GridViewにAdapterやOnItemClickListenerを設定します
         GridView gridView = (GridView) findViewById(R.id.grid_view);
         mPhotoAdapter = new SearchPhotoAdapter(this, mPhotoList);
         gridView.setAdapter(mPhotoAdapter);
         gridView.setOnItemClickListener(new PhotoItemClickListener());
 
-        // TODO 1 getUsers
+        // TODO 1-3 ユーザー一覧を取得し、Spinnerに変更を反映しましょう
         ParseQuery.getQuery("_User").findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> objects, ParseException e) {
                 if (objects == null) return;
-                mUserList.clear();
                 mUserList.addAll(objects);
                 mUserAdapter.notifyDataSetChanged();
             }
         });
     }
 
+    // ユーザーを選択した時の動作を定義するクラス
     private class SpinnerItemSelectedListener implements AdapterView.OnItemSelectedListener {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
-            // TODO 2 get user photos
+            // TODO 2-1 選択されたユーザーの写真一覧を取得し、GridViewを更新します。
 
             ParseObject object = (ParseObject) parent.getItemAtPosition(position);
             String userId = object.getObjectId();
@@ -101,12 +106,13 @@ public class SearchActivity extends AppCompatActivity {
         }
     }
 
+    // 写真をタップした時の動作を定義するクラス
     private class PhotoItemClickListener implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             final ParseObject photo = (ParseObject) parent.getItemAtPosition(position);
 
-            // TODO 3 show alertDialog
+            // TODO 3-1 タップした写真に対してアクションを選択するAlertDialogを表示します
 
             AlertDialog.Builder builder = new AlertDialog.Builder(SearchActivity.this);
             builder.setItems(new String[]{"Like", "Show users who liked", "delete"}, new DialogInterface.OnClickListener() {
@@ -128,6 +134,7 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void putLike(ParseObject photo) {
+        // photo に Likeします
         ParseObject object = new ParseObject("Like");
         object.put("who", ParseUser.getCurrentUser());
         object.put("target_photo", photo);
@@ -142,7 +149,7 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void showLikedUsers(ParseObject photo) {
-
+        // photo に Likeした人の一覧を表示します
         ParseQuery.getQuery("Like")
                 .whereEqualTo("target_photo", photo)
                 .include("who")
@@ -163,6 +170,7 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void deletePhoto(ParseObject photo) {
+        // photo を 消します
         photo.deleteInBackground(new DeleteCallback() {
             @Override
             public void done(ParseException e) {
@@ -175,6 +183,7 @@ public class SearchActivity extends AppCompatActivity {
         });
     }
 
+    // GridViewの写真アイテムのAdapter
     private static class SearchPhotoAdapter extends ArrayAdapter<ParseObject> {
         public SearchPhotoAdapter(Context context, List<ParseObject> objects) {
             super(context, R.layout.item_photo, R.id.label, objects);
@@ -199,6 +208,7 @@ public class SearchActivity extends AppCompatActivity {
         }
     }
 
+    // ユーザー一覧のSpinnerのAdapter
     private static class UserAdapter extends ArrayAdapter<ParseObject> {
         public UserAdapter(Context context, List<ParseObject> objects) {
             super(context, android.R.layout.simple_list_item_1, objects);
@@ -212,6 +222,8 @@ public class SearchActivity extends AppCompatActivity {
                 view = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
             }
             TextView text = (TextView) view.findViewById(android.R.id.text1);
+
+            // TODO 1-1 text に ユーザー名(username)をsetTextしましょう
             ParseObject object = getItem(position);
             text.setText(object.getString("username"));
             return view;
@@ -219,6 +231,7 @@ public class SearchActivity extends AppCompatActivity {
 
         @Override
         public View getDropDownView(int position, View convertView, ViewGroup parent) {
+            // TODO 1-2 getViewと同じ処理を行いましょう
             return getView(position, convertView, parent);
         }
     }
