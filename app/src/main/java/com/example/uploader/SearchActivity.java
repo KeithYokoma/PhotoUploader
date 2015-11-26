@@ -1,6 +1,8 @@
 package com.example.uploader;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -49,33 +51,14 @@ public class SearchActivity extends AppCompatActivity {
         toolbar.addView(customView);
         Spinner spinner = (Spinner) customView.findViewById(R.id.spinner);
         spinner.setAdapter(mUserAdapter);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        spinner.setOnItemSelectedListener(new SpinnerItemSelectedListener());
 
-                ParseObject object = (ParseObject) parent.getItemAtPosition(position);
-                String userId = object.getObjectId();
+        GridView gridView = (GridView) findViewById(R.id.grid_view);
+        mPhotoAdapter = new SearchPhotoAdapter(this, mPhotoList);
+        gridView.setAdapter(mPhotoAdapter);
+        gridView.setOnItemClickListener(new PhotoItemClickListener());
 
-                ParseQuery.getQuery("photo")
-                        .whereEqualTo("uploadUserId", userId)
-                        .findInBackground(new FindCallback<ParseObject>() {
-                            @Override
-                            public void done(List<ParseObject> objects, ParseException e) {
-                                if (objects == null) {
-                                    return;
-                                }
-                                mPhotoList.clear();
-                                mPhotoList.addAll(objects);
-                                mPhotoAdapter.notifyDataSetChanged();
-                            }
-                        });
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
+        // TODO 1 getUsers
         ParseQuery.getQuery("_User").findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> objects, ParseException e) {
@@ -85,52 +68,94 @@ public class SearchActivity extends AppCompatActivity {
                 mUserAdapter.notifyDataSetChanged();
             }
         });
+    }
 
-        GridView gridView = (GridView) findViewById(R.id.grid_view);
-        mPhotoAdapter = new SearchPhotoAdapter(this, mPhotoList);
-        gridView.setAdapter(mPhotoAdapter);
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+    private class SpinnerItemSelectedListener implements AdapterView.OnItemSelectedListener {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+            // TODO 2 get user photos
+
+            ParseObject object = (ParseObject) parent.getItemAtPosition(position);
+            String userId = object.getObjectId();
+
+            ParseQuery.getQuery("photo")
+            .whereEqualTo("uploadUserId", userId)
+            .findInBackground(new FindCallback<ParseObject>() {
+                @Override
+                public void done(List<ParseObject> objects, ParseException e) {
+                    if (objects == null) {
+                        return;
+                    }
+                    mPhotoList.clear();
+                    mPhotoList.addAll(objects);
+                    mPhotoAdapter.notifyDataSetChanged();
+                }
+            });
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+
+        }
+    }
+
+    private class PhotoItemClickListener implements AdapterView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            final ParseObject photo = (ParseObject) parent.getItemAtPosition(position);
+
+            // TODO 3 show alertDialog
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(SearchActivity.this);
+            builder.setItems(new String[]{"Like", "Show users who liked"}, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (which == 0) {
+                        putLike(photo);
+                    }
+                    if (which == 1) {
+                        showLikedUsers(photo);
+                    }
+                }
+            });
+            builder.show();
+        }
+    }
+
+    private void putLike(ParseObject photo) {
+        ParseObject object = new ParseObject("Like");
+        object.put("who", ParseUser.getCurrentUser());
+        object.put("target_photo", photo);
+        object.saveInBackground(new SaveCallback() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public void done(ParseException e) {
+                if (e == null) {
+                    Toast.makeText(getApplicationContext(), "Liked!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
 
-                ParseObject photo = (ParseObject) parent.getItemAtPosition(position);
-                ParseObject object = new ParseObject("Like");
-                object.put("who", ParseUser.getCurrentUser());
-                object.put("target_photo", photo);
-                object.saveInBackground(new SaveCallback() {
+    private void showLikedUsers(ParseObject photo) {
+
+        ParseQuery.getQuery("Like")
+                .whereEqualTo("target_photo", photo)
+                .include("who")
+                .findInBackground(new FindCallback<ParseObject>() {
                     @Override
-                    public void done(ParseException e) {
+                    public void done(List<ParseObject> objects, ParseException e) {
                         if (e == null) {
-                            Toast.makeText(getApplicationContext(), "Liked!", Toast.LENGTH_SHORT).show();
+                            List<String> names = new ArrayList<>();
+                            for (ParseObject obj : objects) {
+                                names.add(obj.getParseObject("who").getString("username"));
+                            }
+                            Toast.makeText(getApplicationContext(), TextUtils.join(", ", names), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Log.e(TAG, "error while reading like data", e);
                         }
                     }
                 });
-            }
-        });
-        gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                ParseObject photo = (ParseObject) parent.getItemAtPosition(position);
-                ParseQuery.getQuery("Like")
-                        .whereEqualTo("target_photo", photo)
-                        .include("who")
-                        .findInBackground(new FindCallback<ParseObject>() {
-                            @Override
-                            public void done(List<ParseObject> objects, ParseException e) {
-                                if (e == null) {
-                                    List<String> names = new ArrayList<>();
-                                    for (ParseObject obj : objects) {
-                                        names.add(obj.getParseObject("who").getString("username"));
-                                    }
-                                    Toast.makeText(getApplicationContext(), TextUtils.join(", ", names), Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Log.e(TAG, "error while reading like data", e);
-                                }
-                            }
-                        });
-                return false;
-            }
-        });
     }
 
     private static class SearchPhotoAdapter extends ArrayAdapter<ParseObject> {

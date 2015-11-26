@@ -43,7 +43,8 @@
             android:label="@string/title_activity_settings"
             android:theme="@style/AppTheme.NoActionBar" >
         </activity>
-        <activity android:name=".SearchActivity" >
+        <activity android:name=".SearchActivity"
+            android:theme="@style/SearchActivityTheme">
         </activity>
     </application>
 
