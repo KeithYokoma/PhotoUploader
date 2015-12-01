@@ -28,6 +28,7 @@ import android.widget.Toast;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseInstallation;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -56,6 +57,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             startActivity(intent);
         } else {
             Toast.makeText(this, "Welcome! " + user.getUsername(), Toast.LENGTH_LONG).show();
+            // TODO
+            ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+            installation.put("user",user);
+            installation.saveInBackground();
         }
 
         setContentView(R.layout.activity_main);
@@ -78,7 +83,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 // Grid のアイテムをタップした時のイベントハンドラ
                 Cursor cursor = (Cursor) parent.getItemAtPosition(position); // Adapter から選択された場所の Cursor を取得する
                 String photoObjectId = cursor.getString(cursor.getColumnIndex(PickedPhotoScheme.COLUMN_PHOTO_OBJECT_ID)); // 写真のオブジェクトを見つけるために保存した objectId を取り出す
-                // TODO (実習1-1) photo から、photoObjectId に一致する ParseObject を取得する
                 ParseQuery.getQuery("photo")
                         .whereEqualTo("objectId", photoObjectId)
                         .findInBackground(new FindCallback<ParseObject>() {
@@ -87,9 +91,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                                 if (e == null && !objects.isEmpty()) {
                                     ParseObject photo = objects.get(0);
                                     ParseObject object = new ParseObject("Like");
-                                    // TODO (実習1-2) Like するユーザのオブジェクトと、Like する写真のオブジェクトを object に追加しよう
-                                    object.put("who", ParseUser.getCurrentUser()); // TODO ユーザ
-                                    object.put("target_photo", photo); // TODO 写真
+                                    object.put("who", ParseUser.getCurrentUser());
+                                    object.put("target_photo", photo);
                                     object.saveInBackground(new SaveCallback() {
                                         @Override
                                         public void done(ParseException e) {
@@ -117,7 +120,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                             public void done(List<ParseObject> objects, ParseException e) {
                                 if (e == null && !objects.isEmpty()) {
                                     ParseObject photo = objects.get(0);
-                                    // TODO (実習2-1) who カラムを含むよう ParseQuery を作る
                                     ParseQuery.getQuery("Like")
                                             .whereEqualTo("target_photo", photo)
                                             .include("who")

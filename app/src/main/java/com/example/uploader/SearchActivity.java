@@ -23,7 +23,9 @@ import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseInstallation;
 import com.parse.ParseObject;
+import com.parse.ParsePush;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
@@ -42,6 +44,7 @@ public class SearchActivity extends AppCompatActivity {
     // 現在表示しているユーザーを入れるリスト
     private List<ParseObject> mUserList = new ArrayList<>();
     private UserAdapter mUserAdapter;
+    private String mTargetUserId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +67,6 @@ public class SearchActivity extends AppCompatActivity {
         gridView.setAdapter(mPhotoAdapter);
         gridView.setOnItemClickListener(new PhotoItemClickListener());
 
-        // TODO 1-3 ユーザー一覧を取得し、Spinnerに変更を反映しましょう
         ParseQuery.getQuery("_User").findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> objects, ParseException e) {
@@ -80,13 +82,11 @@ public class SearchActivity extends AppCompatActivity {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
-            // TODO 2-1 選択されたユーザーの写真一覧を取得し、GridViewを更新します。
-
             ParseObject object = (ParseObject) parent.getItemAtPosition(position);
-            String userId = object.getObjectId();
+            mTargetUserId = object.getObjectId();
 
             ParseQuery.getQuery("photo")
-            .whereEqualTo("uploadUserId", userId)
+            .whereEqualTo("uploadUserId", mTargetUserId)
             .findInBackground(new FindCallback<ParseObject>() {
                 @Override
                 public void done(List<ParseObject> objects, ParseException e) {
@@ -111,8 +111,6 @@ public class SearchActivity extends AppCompatActivity {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             final ParseObject photo = (ParseObject) parent.getItemAtPosition(position);
-
-            // TODO 3-1 タップした写真に対してアクションを選択するAlertDialogを表示します
 
             AlertDialog.Builder builder = new AlertDialog.Builder(SearchActivity.this);
             builder.setItems(new String[]{"Like", "Show users who liked", "delete"}, new DialogInterface.OnClickListener() {
@@ -143,6 +141,16 @@ public class SearchActivity extends AppCompatActivity {
             public void done(ParseException e) {
                 if (e == null) {
                     Toast.makeText(getApplicationContext(), "Liked!", Toast.LENGTH_SHORT).show();
+
+                    // TODO
+                    ParseQuery query = ParseUser.getQuery();
+                    query.whereEqualTo("objectId", mTargetUserId);
+                    ParseQuery pushQuery = ParseInstallation.getQuery();
+                    pushQuery.whereMatchesQuery("user", query);
+                    ParsePush push = new ParsePush();
+                    push.setQuery(pushQuery); // Set our Installation query
+                    push.setMessage(ParseUser.getCurrentUser().getUsername() + " likes your photo!");
+                    push.sendInBackground();
                 }
             }
         });
@@ -223,7 +231,6 @@ public class SearchActivity extends AppCompatActivity {
             }
             TextView text = (TextView) view.findViewById(android.R.id.text1);
 
-            // TODO 1-1 text に ユーザー名(username)をsetTextしましょう
             ParseObject object = getItem(position);
             text.setText(object.getString("username"));
             return view;
@@ -231,7 +238,6 @@ public class SearchActivity extends AppCompatActivity {
 
         @Override
         public View getDropDownView(int position, View convertView, ViewGroup parent) {
-            // TODO 1-2 getViewと同じ処理を行いましょう
             return getView(position, convertView, parent);
         }
     }
