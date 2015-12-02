@@ -142,10 +142,10 @@ public class SearchActivity extends AppCompatActivity {
                 if (e == null) {
                     Toast.makeText(getApplicationContext(), "Liked!", Toast.LENGTH_SHORT).show();
 
-                    // TODO
+                    // TODO2
                     ParseQuery query = ParseUser.getQuery();
                     query.whereEqualTo("objectId", mTargetUserId);
-                    ParseQuery pushQuery = ParseInstallation.getQuery();
+                    ParseQuery<ParseInstallation> pushQuery = ParseInstallation.getQuery();
                     pushQuery.whereMatchesQuery("user", query);
                     ParsePush push = new ParsePush();
                     push.setQuery(pushQuery); // Set our Installation query
