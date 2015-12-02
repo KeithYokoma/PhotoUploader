@@ -23,9 +23,7 @@ import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
-import com.parse.ParseInstallation;
 import com.parse.ParseObject;
-import com.parse.ParsePush;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
@@ -142,22 +140,7 @@ public class SearchActivity extends AppCompatActivity {
                 if (e == null) {
                     Toast.makeText(getApplicationContext(), "Liked!", Toast.LENGTH_SHORT).show();
 
-                    // TODO2
-                    // ユーザーを特定するクエリ
-                    ParseQuery userQuery = ParseUser.getQuery();
-                    userQuery.whereEqualTo("objectId", mTargetUserId);
-
-                    // インストールデータを特定するクエリ
-                    ParseQuery<ParseInstallation> installationQuery = ParseInstallation.getQuery();
-
-                    // 指定ユーザーのインストールデータという条件を付ける
-                    installationQuery.whereMatchesQuery("user", userQuery);
-
-                    ParsePush push = new ParsePush();
-                    // 上記の条件を指定する
-                    push.setQuery(installationQuery);
-                    push.setMessage(ParseUser.getCurrentUser().getUsername() + " likes your photo!");
-                    push.sendInBackground();
+                    // TODO 2.likeした相手にpush通知をおくろう
                 }
             }
         });

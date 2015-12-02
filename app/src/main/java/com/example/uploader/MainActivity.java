@@ -28,7 +28,6 @@ import android.widget.Toast;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
-import com.parse.ParseInstallation;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -57,10 +56,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             startActivity(intent);
         } else {
             Toast.makeText(this, "Welcome! " + user.getUsername(), Toast.LENGTH_LONG).show();
-            // TODO
-            ParseInstallation installation = ParseInstallation.getCurrentInstallation();
-            installation.put("user",user);
-            installation.saveInBackground();
+            // TODO 1.自分のRegistration IDを自分のものとしてparseに送信しよう
         }
 
         setContentView(R.layout.activity_main);
