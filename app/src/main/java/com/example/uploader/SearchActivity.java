@@ -143,12 +143,19 @@ public class SearchActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "Liked!", Toast.LENGTH_SHORT).show();
 
                     // TODO2
-                    ParseQuery query = ParseUser.getQuery();
-                    query.whereEqualTo("objectId", mTargetUserId);
-                    ParseQuery<ParseInstallation> pushQuery = ParseInstallation.getQuery();
-                    pushQuery.whereMatchesQuery("user", query);
+                    // ユーザーを特定するクエリ
+                    ParseQuery userQuery = ParseUser.getQuery();
+                    userQuery.whereEqualTo("objectId", mTargetUserId);
+
+                    // インストールデータを特定するクエリ
+                    ParseQuery<ParseInstallation> installationQuery = ParseInstallation.getQuery();
+
+                    // 指定ユーザーのインストールデータという条件を付ける
+                    installationQuery.whereMatchesQuery("user", userQuery);
+
                     ParsePush push = new ParsePush();
-                    push.setQuery(pushQuery); // Set our Installation query
+                    // 上記の条件を指定する
+                    push.setQuery(installationQuery);
                     push.setMessage(ParseUser.getCurrentUser().getUsername() + " likes your photo!");
                     push.sendInBackground();
                 }
